@@ -44,6 +44,38 @@ void processInfo(PROCESSENTRY32 pe32) {
     CloseHandle(hProcess);
 }
 
+void closeProcess(const wchar_t* processName){
+	
+	HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnapshot == INVALID_HANDLE_VALUE) {
+        wprintf(L"fail\n");
+        return 1;
+    }
+    
+	PROCESSENTRY32W pe;
+	pe.dwSize = sizeof(pe);
+	
+	if(Process32First(hSnapshot,&pe)){
+		do{
+			if(_wcsicmp(pe.szExeFile,processName) == 0){
+				HANDLE hProcess = OpenProcess(PROCESS_TERMINATE,FALSE,pe.th32ProcessID);
+				if(hProcess){
+					if(TerminateProcess(hProcess,0)){
+						wprintf(l"close process: %s(PID: %u)\n",pe.szExeFile,pe.th32ProcessID);
+					}
+					else{
+						wprintf(l"fail close: %s \n",pe.szExeFile);
+					}
+					CloseHandle(hProcess);
+				}
+			}
+		}
+		while(Process32NextW(hSnapshotm&pe));
+	}
+	CloseHandle(hSnapshot);
+
+}
+
 int main() {
     HANDLE hSnap;
     PROCESSENTRY32 pe32;
